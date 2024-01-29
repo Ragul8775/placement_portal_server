@@ -12,10 +12,32 @@ module.exports = connection;
 /* 
 CREATE TABLE `placement_management`.`users` (
     `id` INT NOT NULL AUTO_INCREMENT,
-    `name` VARCHAR(45) NOT NULL,
+    `netid` VARCHAR(10) NOT NULL,
     `email` VARCHAR(45) NOT NULL,
-    `password` VARCHAR(45) NOT NULL,
+    `password` VARCHAR(95) NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `email_UNIQUE` (`email` ASC)
+  );
+   */
+/* 
+  CREATE TABLE student_details (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    netid VARCHAR(45) NOT NULL,
+    year VARCHAR(10) NOT NULL,
+    reg_no VARCHAR(45) NOT NULL UNIQUE,
+    full_name VARCHAR(45) NOT NULL,
+    gender VARCHAR(45),
+    nri VARCHAR(45),
+    dob DATE,
+    specialization VARCHAR(45),
+    section VARCHAR(45) NOT NULL,
+    srm_mail VARCHAR(45),
+    personal_mail VARCHAR(45),
+    mobile_no VARCHAR(45),
+    father VARCHAR(45),
+    fa VARCHAR(45),
+    placement VARCHAR(45),  -- Initially empty
+    package VARCHAR(45),    -- Initially empty
+    company VARCHAR(45)     -- Initially empty
   );
    */
