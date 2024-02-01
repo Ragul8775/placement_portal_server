@@ -21,10 +21,10 @@ CREATE TABLE `placement_management`.`users` (
    */
 /* 
   CREATE TABLE student_details (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT,
     netid VARCHAR(45) NOT NULL,
     year VARCHAR(10) NOT NULL,
-    reg_no VARCHAR(45) NOT NULL UNIQUE,
+    reg_no VARCHAR(45) NOT NULL,
     full_name VARCHAR(45) NOT NULL,
     gender VARCHAR(45),
     nri VARCHAR(45),
@@ -38,6 +38,26 @@ CREATE TABLE `placement_management`.`users` (
     fa VARCHAR(45),
     placement VARCHAR(45),  -- Initially empty
     package VARCHAR(45),    -- Initially empty
-    company VARCHAR(45)     -- Initially empty
-  );
+    company VARCHAR(45),    -- Initially empty
+    PRIMARY KEY (id),
+    UNIQUE (netid, year, reg_no)
+);
    */
+
+  /* return{
+      
+    netid:netid,
+    year:year,
+    reg_no: row['Registration No.'],
+    full_name:row['Full Name'],
+    gender:row['GENDER'],
+    nri:row['NRI STUDENT'],
+    dob: row['DATE OF BIRTH'],  
+    specialization:row['Specialization'],
+    section:row['Section'],
+    srm_mail:row['SRMIST Mail ID'],
+    personal_mail:row['Personal Mail ID'],
+    mobile_no:row['Mobile Number'],
+    father:row['Father Mobile Number'],
+    fa:row['Name of Faculty Advisor'],
+    } */
