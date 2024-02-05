@@ -16,13 +16,12 @@ app.use(express.json());
 
 app.use(reqLogger);
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    methods: ["POST", "GET"],
-    credentials: true, // or '*' to allow all origins
-  })
-);
+const corsOptions = {
+  origin: "http://localhost:5173", // Specify the exact origin of your frontend app
+  credentials: true, // Allow credentials
+};
+
+app.use(cors(corsOptions));
 
 // Log request info
 function reqLogger(req, res, next) {
@@ -258,6 +257,140 @@ app.get("/availableYears/:netid", (req, res) => {
     res.json(years);
   });
 });
+//update a single students details
+/* app.put("/updateStudent/:netid/:reg_no", (req, res) => {
+  const { netid, reg_no } = req.params;
+  const updateFields = req.body;
+  console.log("UpdateFields:", updateFields);
+
+  connection.query(
+    "SELECT * FROM student_details WHERE reg_no = ? AND netid = ?",
+    [reg_no, netid],
+    (error, results) => {
+      if (error) {
+        console.error("Error fetching student details:", error);
+        return res.status(500).send({
+          success: false,
+          message: "Failed to fetch student details.",
+        });
+      }
+
+      if (results.length === 0) {
+        return res
+          .status(404)
+          .send({ success: false, message: "Student not found." });
+      }
+    // Exclude fields not to be updated (like 'id', 'netid', and any others not intended for update)
+      const currentState = results[0];
+      delete currentState.id; // Assuming 'id' is auto-increment primary key and should not be updated
+      delete currentState.netid; // 'netid' is used in WHERE clause, not typically updated
+      delete currentState.year; // Exclude if 'year' should not be updated based on request
+      // Add or remove fields based on your requirements
+
+      const mergedUpdates = { ...currentState, ...updateFields };
+      const nonEmptyUpdateFields = Object.entries(updateFields).reduce(
+        (acc, [key, value]) => {
+          if (value !== "") acc[key] = value; // Consider also checking for null/undefined if needed
+          return acc;
+        },
+        {}
+      );
+      const setClause = Object.keys(nonEmptyUpdateFields)
+        .map((key) => `${key}=?`)
+        .join(", ");
+      const queryValues = [
+        ...Object.values(nonEmptyUpdateFields),
+        reg_no,
+        netid,
+      ];
+
+      console.log("setClause:", setClause);
+      // Step 3: Update the database with merged object
+      const query = `
+      UPDATE student_details
+      SET ${setClause}
+      WHERE reg_no = ? AND netid = ?
+    `; 
+      const setClause = Object.keys(updateFields)
+        .map((key) => `${key} = ?`)
+        .join(", ");
+      const queryValues = [...Object.values(updateFields), netid, reg_no]; // Assuming these are the correct identifiers
+
+      const query = `
+  UPDATE student_details
+  SET ${setClause}
+  WHERE reg_no = ? AND netid = ?
+`;
+
+      connection.query(query, queryValues, (error, result) => {
+        if (error) {
+          console.error("Error updating student details:", error);
+          return res.status(500).send({
+            success: false,
+            message: "Failed to update student details.",
+          });
+        }
+        console.log("Affected rows:", result.affectedRows);
+        console.log("Update Result:", results);
+        res.status(200).json({
+          Status: "Success",
+          Message: "Student details updated successfully.",
+        });
+      });
+    }
+  );
+}); */
+app.put("/updateStudent/:netid/:reg_no", (req, res) => {
+  const { netid, reg_no } = req.params;
+  const year = req.query.year; // If year is passed as a query parameter
+  const updateFields = req.body;
+
+  // Filter out empty fields from the updateFields object
+  const fieldsToUpdate = Object.entries(updateFields).reduce(
+    (acc, [key, value]) => {
+      if (value !== "") {
+        // Checks if the field is not an empty string
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {}
+  );
+
+  // If no fields are left to update, return an error or a message
+  if (Object.keys(fieldsToUpdate).length === 0) {
+    return res
+      .status(400)
+      .send({ message: "No valid fields provided for update." });
+  }
+
+  // Construct the SET part of the SQL query dynamically
+  const setClauseParts = Object.keys(fieldsToUpdate).map((key) => `${key} = ?`);
+  const setClause = setClauseParts.join(", ");
+  const queryValues = [...Object.values(fieldsToUpdate), reg_no, netid, year];
+
+  // Construct the full SQL query
+  const query = `UPDATE student_details SET ${setClause} WHERE reg_no = ? AND netid = ? AND year = ?`;
+
+  // Execute the query
+  connection.query(query, queryValues, (error, results) => {
+    if (error) {
+      console.error("Error updating student details:", error);
+      return res
+        .status(500)
+        .send({ message: "Failed to update student details." });
+    }
+    if (results.affectedRows > 0) {
+      res.status(200).json({
+        Status: "Success",
+        Message: "Student details updated successfully.",
+      });
+    } else {
+      res.status(404).send({ message: "Student not found." });
+    }
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   connection.connect((err) => {
