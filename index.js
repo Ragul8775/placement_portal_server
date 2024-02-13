@@ -7,6 +7,7 @@ const connection = require("./database/connection");
 const multer = require("multer");
 const bodyParser = require("body-parser");
 const XLSX = require("xlsx");
+const ExcelJS = require("exceljs");
 const app = express();
 const port = 8000;
 require("dotenv").config();
@@ -510,6 +511,71 @@ app.post("/studentUpdate/placementDetails", (req, res) => {
     }
   );
 });
+app.get("/student-download", (req, res) => {
+  let { netid, year, section, placement } = req.query;
+  let conditions = ["netid = ?", "year = ?"];
+  let params = [netid, year];
+
+  if (section) {
+    conditions.push("section = ?");
+    params.push(section);
+  }
+  if (placement) {
+    conditions.push("placement = ?");
+    params.push(placement);
+  }
+
+  let query = `SELECT * FROM student_details WHERE ${conditions.join(" AND ")}`;
+  console.log("Executing query:", query);
+  console.log("With parameters:", params);
+
+  connection.query(query, params, async (error, results) => {
+    if (error) {
+      console.error("SQL Error:", error.sqlMessage);
+      return res.status(500).send("Error fetching student data");
+    }
+
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Students");
+
+      // Define columns in the Excel sheet
+      worksheet.columns = [
+        { header: "Reg. No", key: "reg_no", width: 15 },
+        { header: "Full Name", key: "full_name", width: 25 },
+        { header: "Section", key: "section", width: 25 },
+        { header: "Specialization", key: "specialization", width: 25 },
+        { header: "SRM Mail", key: "srm_mail", width: 25 },
+        { header: "Personal Mail", key: "personal_mail", width: 25 },
+        { header: "Placement", key: "placement", width: 25 },
+        { header: "Mobile Number", key: "mobile_no", width: 25 },
+        { header: "Faculty Advisor", key: "fa", width: 25 },
+      ];
+
+      // Add rows from query results
+      worksheet.addRows(results);
+
+      // Set filename dynamically based on filters
+      let filename = `students_${netid}_${year}`;
+      if (section) filename += `_${section}`;
+      if (placement) filename += `_${placement.replace(/\s+/g, "_")}`;
+      filename += ".xlsx";
+
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
+
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (err) {
+      console.error("Failed to generate Excel file:", err);
+      res.status(500).send("Failed to generate Excel file");
+    }
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   connection.connect((err) => {
